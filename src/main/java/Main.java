@@ -1,44 +1,46 @@
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 public class Main {
     public static void main (String[] args) throws InterruptedException {
 
         if (args.length == 1) {
+
             A a = new A();
-            Thread t = new Thread(a, "A");
-            long startTime = System.currentTimeMillis();
-            t.start();
-            t.join();
-            long endTime = System.currentTimeMillis();
-            double durationA = (endTime - startTime) / 1000.0;
-
-            B b = new B();
-            Thread t1 = new Thread(b, "B");
-            startTime = System.currentTimeMillis();
-            t1.start();
-            t1.join();
-            endTime = System.currentTimeMillis();
-            double durationB = (endTime - startTime) / 1000.0;
-
             C c = new C();
-            Thread t2 = new Thread(c, "C");
-            startTime = System.currentTimeMillis();
-            t2.start();
-            t2.join();
-            endTime = System.currentTimeMillis();
-            double durationC = (endTime - startTime) / 1000.0;
+            B b = new B();
+
+
+            /*
+            Neviem, ci je ziadane aby algoritmy mohli bezat sucastne ak ano tak:
+            Executors.newCachedThreadPool() - vsetky vypocty bezia naraz, kazdy v inom vlakne
+            inak:
+            Executors.newSingleThreadExecutor(); - pouziva iba 1 vlakno, nemoze bezat viac vypoctov naraz
+             */
+            ExecutorService e = Executors.newCachedThreadPool();
+            e.execute(a);
+            e.execute(b);
+            e.execute(c);
+
+            e.shutdown();
+            e.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+
+
 
             if (args[0].equals("all")) {
-                System.out.println(t.getName() + "," + durationA + "s," + a.getValue());
-                System.out.println(t1.getName() + "," + durationB + "s," + b.getValue());
-                System.out.println(t2.getName() + "," + durationC + "s," + c.getValue());
+                System.out.println("A," + a.getDuration() + "s," + a.getValue());
+                System.out.println("B," + b.getDuration() + "s," + b.getValue());
+                System.out.println("C," + c.getDuration() + "s," + c.getValue());
 
             } else if (args[0].equals("first")){
-                double smallest = Math.min(durationA, Math.min(durationB, durationC));
-                if (smallest == durationA) {
-                    System.out.println(t.getName() + "," + durationA + "s," + a.getValue());
-                } else if (smallest == durationB) {
-                    System.out.println(t1.getName() + "," + durationB + "s," + b.getValue());
+                double smallest = Math.min(a.getDuration(), Math.min(b.getDuration(), c.getDuration()));
+                if (smallest == a.getDuration()) {
+                    System.out.println("A," + a.getDuration() + "s," + a.getValue());
+                } else if (smallest == b.getDuration()) {
+                    System.out.println("B," + b.getDuration() + "s," + b.getValue());
                 } else {
-                    System.out.println(t2.getName() + "," + durationC + "s," + c.getValue());
+                    System.out.println("C," + c.getDuration() + "s," + c.getValue());
                 }
 
             } else {
